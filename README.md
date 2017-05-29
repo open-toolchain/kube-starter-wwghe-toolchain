@@ -1,4 +1,4 @@
-# Simple Cloud Foundry toolchain with IBM Whitewater GHE
+# Get started with Cloud Foundry and IBM Whitewater
 
 ### Continuously deliver a Cloud Foundry app with IBM Whitewater GHE
 
