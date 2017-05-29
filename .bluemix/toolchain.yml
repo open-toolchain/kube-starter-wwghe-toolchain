@@ -13,9 +13,9 @@ template:
     - sample-repo
   info:
     git url: >-
-      [https://github.com/open-toolchain/simple-toolchain-hosted](https://github.com/open-toolchain/simple-toolchain-hosted)
+      [https://github.com/open-toolchain/cf-starter-wwghe-toolchain](https://github.com/open-toolchain/cf-starter-wwghe-toolchain)
     git branch: >-
-      [master](https://github.com/open-toolchain/simple-toolchain-hosted/tree/master)
+      [master](https://github.com/open-toolchain/cf-starter-wwghe-toolchain/tree/master)
 toolchain:
   name: 'simple-toolchain-{{timestamp}}'
   template:
@@ -23,7 +23,7 @@ toolchain:
       $ref: "#/messages/template.gettingStarted"
 services:
   sample-repo:
-    service_id: hostedgit
+    service_id: github_integrated
     parameters:
       repo_name: '{{toolchain.name}}'
       repo_url: 'https://github.com/open-toolchain/node-hello-world'
@@ -50,6 +50,19 @@ services:
         execute: true
   webide:
     service_id: orion
+  messaging:
+    service_id: slack
+  workspaces:
+    service_id: customtool
+    parameters:
+      type: Whitewater
+      lifecyclePhase: "CULTURE"
+      imageUrl: https://www.ibm.com/design/assets/language/resources/icon-library/icons/svg/object-based/bee_64.svg
+      documentationUrl: https://whitewater.ibm.com/about
+      name: Tools, Practices, Courses
+      dashboard_url: https://whitewater.ibm.com/
+      description: Equip product and service teams with practical resources so they can get to better outcomes, faster.
+      additional-properties:     
 form:
   pipeline:
     parameters:
