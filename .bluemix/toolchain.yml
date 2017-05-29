@@ -7,7 +7,7 @@ template:
   description:
     $ref: "#/messages/template.description"
   header: '![](toolchain.svg?localize "header image")'
-  icon: "https://www.ibm.com/design/assets/language/resources/icon-library/icons/svg/object-based/bee_64.svg"
+  icon: icon.svg
   required:
     - sample-build
     - sample-repo
