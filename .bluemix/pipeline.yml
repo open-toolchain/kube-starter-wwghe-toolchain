@@ -25,7 +25,7 @@ stages:
     value: undefined
     type: text
   jobs:
-  - name: Zero Downtime Deploy
+  - name: Rolling Deploy
     type: deployer
     target:
       region_id: ${STAGING_REGION_ID}
@@ -74,7 +74,7 @@ stages:
     value: undefined
     type: text
   jobs:
-  - name: Zero Downtime Deploy
+  - name: Rolling Deploy
     type: deployer
     target:
       region_id: ${PROD_REGION_ID}
