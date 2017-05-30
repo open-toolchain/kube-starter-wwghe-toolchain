@@ -55,7 +55,12 @@ services:
     service_id: orion
   messaging:
     service_id: slack
-  workspaces:
+  insights:
+    service_id: draservicebroker  
+    parameters:
+      type: default
+      is_developer_insights_enabled: false
+  whitewater:
     service_id: customtool
     parameters:
       type: Whitewater

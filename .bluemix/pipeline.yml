@@ -7,6 +7,13 @@ stages:
     service: ${SAMPLE_REPO}
   triggers:
   - type: commit
+  properties:
+  - name: LOGICAL_APP_NAME
+    value: ${CF_APP_NAME}
+    type: text
+  - name: BUILD_PREFIX
+    value: Build
+    type: text
   jobs:
   - name: Build
     type: builder
@@ -24,6 +31,15 @@ stages:
   - name: APP_URL
     value: undefined
     type: text
+  - name: LOGICAL_APP_NAME
+    value: ${CF_APP_NAME}
+    type: text
+  - name: BUILD_PREFIX
+    value: Build
+    type: text
+  - name: LOGICAL_ENV_NAME
+    value: undefined
+    type: STAGING
   jobs:
   - name: Rolling Deploy
     type: deployer
@@ -73,6 +89,15 @@ stages:
   - name: APP_URL
     value: undefined
     type: text
+  - name: LOGICAL_APP_NAME
+    value: ${CF_APP_NAME}
+    type: text
+  - name: BUILD_PREFIX
+    value: Build
+    type: text
+  - name: LOGICAL_ENV_NAME
+    value: undefined
+    type: PROD    
   jobs:
   - name: Rolling Deploy
     type: deployer
