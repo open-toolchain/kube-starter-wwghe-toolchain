@@ -12,7 +12,7 @@ stages:
     value: ${CF_APP_NAME}
     type: text
   - name: BUILD_PREFIX
-    value: Build
+    value: master
     type: text
   jobs:
   - name: Build
@@ -34,12 +34,12 @@ stages:
   - name: LOGICAL_APP_NAME
     value: ${CF_APP_NAME}
     type: text
-  - name: BUILD_PREFIX
-    value: Build
-    type: text
   - name: LOGICAL_ENV_NAME
-    value: undefined
-    type: STAGING
+    value: STAGING
+    type: text
+  - name: BUILD_PREFIX
+    value: master
+    type: text
   jobs:
   - name: Rolling Deploy
     type: deployer
@@ -92,12 +92,12 @@ stages:
   - name: LOGICAL_APP_NAME
     value: ${CF_APP_NAME}
     type: text
-  - name: BUILD_PREFIX
-    value: Build
-    type: text
   - name: LOGICAL_ENV_NAME
-    value: undefined
-    type: PROD    
+    value: PROD
+    type: text
+  - name: BUILD_PREFIX
+    value: master
+    type: text 
   jobs:
   - name: Rolling Deploy
     type: deployer
