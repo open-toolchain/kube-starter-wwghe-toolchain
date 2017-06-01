@@ -108,44 +108,6 @@ stages:
     value: ''
     type: text    
   jobs:
-  - name: Rolling Deploy
-    type: deployer
-    target:
-      region_id: ${PROD_REGION_ID}
-      organization: ${PROD_ORG_NAME}
-      space: ${PROD_SPACE_NAME}
-      application: ${CF_APP_NAME}
-    script: |
-      #!/bin/bash
-      # Push app
-      export CF_APP_NAME="$CF_APP"
-      if ! cf app $CF_APP_NAME; then  
-        cf push $CF_APP_NAME
-      else
-        old_cf_app_name=${CF_APP_NAME}-OLD-$(date +"%s")
-        rollback() {
-          set +e  
-          if cf app $old_cf_app_name; then
-            cf logs $CF_APP_NAME --recent
-            cf delete $CF_APP_NAME -f
-            cf rename $old_cf_app_name $CF_APP_NAME
-          fi
-          exit 1
-        }
-        set -e
-        trap rollback ERR
-        cf rename $CF_APP $old_cf_app_name
-        cf push $CF_APP_NAME
-        cf delete $old_cf_app_name -f
-      fi
-      # Export app name and URL for use in later Pipeline jobs
-      export APP_URL=http://$(cf app $CF_APP_NAME | grep urls: | awk '{print $2}')
-      # View logs
-      #cf logs "${CF_APP}" --recent
-
-
-
-
   - name: Deploy Dark
     type: deployer
     target:
@@ -163,7 +125,7 @@ stages:
       export TEMP_APP_NAME="${CF_APP_NAME}-${BUILD_NUMBER}-$(date +%s)"
       echo "Pushing new app:$TEMP_APP_NAME"
       cf push $TEMP_APP_NAME --no-start
-      cf set-env $TEMP_APP_NAME WORKSPACE_ID $WORKSPACE_ID
+      # cf set-env $TEMP_APP_NAME some_variable some_value
       cf start $TEMP_APP_NAME
       cf apps | grep $TEMP_APP_NAME
       url=$(cf app $TEMP_APP_NAME | grep urls: | awk '{print $2}')
