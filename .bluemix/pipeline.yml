@@ -93,7 +93,7 @@ stages:
     value: ${CF_APP_NAME}
     type: text
   - name: LOGICAL_ENV_NAME
-    value: PROD
+    value: PRODUCTION
     type: text
   - name: BUILD_PREFIX
     value: master
