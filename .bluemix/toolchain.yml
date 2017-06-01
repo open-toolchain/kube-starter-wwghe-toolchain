@@ -74,6 +74,10 @@ services:
 form:
   pipeline:
     parameters:
+      staging-region: ibm:yp:us-south
+      staging-space: staging
+      prod-region: staging
+      prod-space: prod
       prod-app-name: '{{services.sample-repo.parameters.repo_name}}'
     schema:
       $ref: deploy.json
