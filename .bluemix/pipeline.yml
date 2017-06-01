@@ -122,6 +122,7 @@ stages:
       # Compute a unique app name using the reserved CF_APP name (configured in the 
       # deployer or from the manifest.yml file), the build number, and a 
       # timestamp (allowing multiple deploys for the same build).
+      export CF_APP_NAME="${CF_APP}"
       export TEMP_APP_NAME="${CF_APP_NAME}-${BUILD_NUMBER}-$(date +%s)"
       echo "Pushing new app:$TEMP_APP_NAME"
       cf push $TEMP_APP_NAME --no-start
