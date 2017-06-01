@@ -17,7 +17,7 @@ template:
     git branch: >-
       [master](https://github.com/open-toolchain/cf-starter-wwghe-toolchain/tree/master)
 toolchain:
-  name: 'simple-toolchain-{{timestamp}}'
+  name: 'wwater-toolchain-{{timestamp}}'
   template:
     getting_started:
       $ref: "#/messages/template.gettingStarted"
