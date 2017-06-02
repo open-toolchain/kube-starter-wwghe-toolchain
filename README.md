@@ -2,7 +2,14 @@
 
 ### Continuously deliver a Cloud Foundry app with IBM Whitewater GHE
 
-This Hello World application uses Node.js and includes a DevOps toolchain that is preconfigured for continuous delivery, source control, issue tracking, and online editing.
+![Toolchain image](.bluemix/toolchain.png)
+
+This template will configure a toolchain that can:
+* perform rolling deploys through Bluemix stage1 (YS1) and then to Bluemix prod (YP).
+* provide cognitive insights to learn where you most need to improve your developer productivity, code quality, and delivery cycle times; as well as provide quality gates that will stop a deploy that doesn’t cut the mustard.
+* track code deployments back to GHE commits and issues
+* notify about delivery process in Slack
+* allows to edit code online with WebIDE (but you can use desktop tools at your preference)
 
 ### To get started, click **Create toolchain**.
 
