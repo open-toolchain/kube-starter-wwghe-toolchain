@@ -18,9 +18,9 @@ This template will configure a toolchain that can:
 ---
 ### Learn more
 
-* [Step by step tutorial]() -- coming soon
+* About this [toolchain capabilities](https://w3-connections.ibm.com/blogs/92423b28-353a-49d9-9d5d-d21cd1de10be/entry/Announcing_support_for_IBM_Confidential_toolchains_in_the_Continuous_Delivery_service_on_Bluemix_Public?lang=en_us)
 * Learn about [Whitewater](https://whitewater.ibm.com)
-* [Getting started](https://bluemix.net/devops)
+* Getting started with [Bluemix DevOps](https://bluemix.net/devops)
 * [Documentation](https://console.ng.bluemix.net/docs/services/ContinuousDelivery/index.html?pos=2)
 * [Toolchains on the Bluemix Garage Method site](https://www.ibm.com/devops/method/category/tools)
 * Blog: [Bluemix Continuous Delivery is now live](https://www.ibm.com/blogs/bluemix/2016/11/bluemix-continuous-delivery-is-now-live/)
