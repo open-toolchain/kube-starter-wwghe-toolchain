@@ -1,11 +1,11 @@
-# Get started with Docker/Kubernetes and IBM Whitewater
+# ![Icon](./.bluemix/secure-lock-kubernetes.png) Get started with Docker/Kubernetes and IBM Whitewater
 
 ### Continuously deliver a Docker app with IBM Whitewater GHE and Kubernetes
 
 ![Toolchain image](.bluemix/toolchain.png)
 
 This template will configure a toolchain that can:
-* build a Docker image from app source code
+* build a Docker image from app source code, and secure it using Vulnerability Advisor
 * orchestrate a Docker image deployments through a staging Kubernetes cluster and a production Kubernetes cluster (using distinct namespaces to allow sharing same cluster)
 * provide cognitive insights to learn where you most need to improve your developer productivity, code quality, and delivery cycle times; as well as provide quality gates that will stop a deploy that doesn’t cut the mustard.
 * track code deployments back to GHE commits and issues --- TBD

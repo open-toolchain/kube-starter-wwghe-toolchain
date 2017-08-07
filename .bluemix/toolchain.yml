@@ -17,7 +17,7 @@ template:
     git branch: >-
       [master](https://github.com/open-toolchain/kube-starter-wwghe-toolchain/tree/master)
 toolchain:
-  name: 'wwater-k8s-toolchain-{{timestamp}}'
+  name: 'ww-kube-toolchain-{{timestamp}}'
   template:
     getting_started:
       $ref: "#/messages/template.gettingStarted"
@@ -42,14 +42,17 @@ services:
           $ref: pipeline.yml
           $refType: text
         env:
-          SAMPLE_REPO: sample-repo
-          CF_APP_NAME: '{{form.pipeline.parameters.prod-app-name}}'
+          GIT_REPO: sample-repo
+          CF_APP_NAME: '{{form.pipeline.parameters.app-name}}'
           STAGING_NAMESPACE_NAME: '{{form.pipeline.parameters.staging-space}}'
           STAGING_ORG_NAME: '{{form.pipeline.parameters.staging-organization}}'
           STAGING_REGION_ID: '{{form.pipeline.parameters.staging-region}}'          
+          STAGING_CLUSTER_NAME: '{{form.pipeline.parameters.staging-cluster-name}}'
           PROD_NAMESPACE_NAME: '{{form.pipeline.parameters.prod-space}}'
           PROD_ORG_NAME: '{{form.pipeline.parameters.prod-organization}}'
           PROD_REGION_ID: '{{form.pipeline.parameters.prod-region}}'
+          PROD_CLUSTER_NAME: '{{form.pipeline.parameters.prod-cluster-name}}'
+          API_KEY: '{{form.pipeline.parameters.api-key}}'
         execute: true
   webide:
     service_id: orion
