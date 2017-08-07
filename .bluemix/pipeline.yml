@@ -4,214 +4,188 @@ stages:
   inputs:
   - type: git
     branch: master
-    service: ${SAMPLE_REPO}
+    service: ${GIT_REPO}    
   triggers:
   - type: commit
-  properties:
-  - name: LOGICAL_APP_NAME
-    value: ${CF_APP_NAME}
-    type: text
-  - name: BUILD_PREFIX
-    value: master
-    type: text
   jobs:
-  - name: Build
+  - name: Container build
     type: builder
-- name: STAGING
-  inputs:
-  - type: job
-    stage: BUILD
-    job: Build
-  triggers:
-  - type: stage
-  properties:
-  - name: CF_APP_NAME
-    value: undefined
-    type: text
-  - name: APP_URL
-    value: undefined
-    type: text
-  - name: LOGICAL_APP_NAME
-    value: ${CF_APP_NAME}
-    type: text
-  - name: LOGICAL_ENV_NAME
-    value: STAGING
-    type: text
-  - name: BUILD_PREFIX
-    value: master
-    type: text
-  jobs:
-  - name: Rolling Deploy
-    type: deployer
+    extension_id: ibm.devops.services.pipeline.container.builder
     target:
       region_id: ${STAGING_REGION_ID}
       organization: ${STAGING_ORG_NAME}
       space: ${STAGING_SPACE_NAME}
-      application: ${CF_APP_NAME}
+    IMAGE_NAME: ${CF_APP_NAME}
+    USE_CACHED_LAYERS: 'true'
+    COMMAND: |
+      #!/bin/bash
+      # The following colors have been defined to help with presentation of logs: green, red, label_color, no_color.  
+      echo -e "${label_color}Starting build script${no_color}"
+      
+      # The IBM Container Service CLI (ice), Git client (git), IDS Inventory CLI (ids-inv) and Python 2.7.3 (python) have been installed.
+      # Based on the organization and space selected in the Job credentials are in place for both IBM Container Service and IBM Bluemix 
+      #####################
+      # Run unit tests    #
+      #####################
+      echo -e "${label_color}No unit tests cases have been checked in ${no_color}"
+      
+      ######################################
+      # Build Container via Dockerfile     #
+      ######################################
+      
+      # REGISTRY_URL=${CCS_REGISTRY_HOST}/${NAMESPACE}
+      # FULL_REPOSITORY_NAME=${REGISTRY_URL}/${IMAGE_NAME}:${APPLICATION_VERSION}   
+      
+      # Possible adding retries to build the image
+      if [ -f Dockerfile ]; then 
+          echo -e "${label_color}BUILDING ${FULL_REPOSITORY_NAME} ${no_color}"
+          ${EXT_DIR}/utilities/sendMessage.sh -l info -m "New container build requested for ${FULL_REPOSITORY_NAME}"
+          # build image
+          BUILD_COMMAND=""
+          if [ "${USE_CACHED_LAYERS}" == "true" ]; then 
+              BUILD_COMMAND="build --pull --tag ${FULL_REPOSITORY_NAME} ${WORKSPACE}"
+              ice_retry ${BUILD_COMMAND}
+              RESULT=$?
+          else 
+              BUILD_COMMAND="build --no-cache --tag ${FULL_REPOSITORY_NAME} ${WORKSPACE}"
+              ice_retry ${BUILD_COMMAND}
+              RESULT=$?
+          fi 
+      
+          if [ $RESULT -ne 0 ]; then
+              echo -e "${red}Error building image ${no_color}" | tee -a "$ERROR_LOG_FILE"
+              echo "Build command: ice ${BUILD_COMMAND}"
+              ice info 
+              ice images
+              ${EXT_DIR}/print_help.sh
+              ${EXT_DIR}/utilities/sendMessage.sh -l bad -m "Container build of ${FULL_REPOSITORY_NAME} failed"
+              exit 1
+          else
+              ${EXT_DIR}/utilities/sendMessage.sh -l good -m "Container build of ${FULL_REPOSITORY_NAME} was successful"
+              echo -e "${green}Container build of ${FULL_REPOSITORY_NAME} was successful ${no_color}"
+          fi  
+      else 
+          echo -e "${red}Dockerfile not found at the repository root${no_color}"
+          exit 1
+      fi  
+      
+      ######################################################################################
+      # Copy any artifacts that will be needed for deployment and testing to $WORKSPACE    #
+      ######################################################################################
+      echo "IMAGE_NAME=${FULL_REPOSITORY_NAME}" >> $ARCHIVE_DIR/build.properties
+      if [ -f deployment.yml ]; then
+          #Update deployment.yml with image name
+          echo "UPDATING DEPLOYMENT MANIFEST:"
+          sed -i "s~^\([[:blank:]]*\)image:.*$~\1image: ${FULL_REPOSITORY_NAME}~" deployment.yml
+          cat deployment.yml
+          cp deployment.yml $ARCHIVE_DIR/
+      else 
+          echo -e "${red}Kubernetes deployment file 'deployment.yml' not found at the repository root${no_color}"
+          exit 1
+      fi      
+- name: VALIDATE
+  inputs:
+  - type: job
+    stage: BUILD
+    job: Container build
+  triggers:
+  - type: stage
+  properties:
+  - name: FULL_REPOSITORY_NAME
+    value: ''
+    type: text  
+  jobs:
+  - name: Vulnerability Advisor
+    type: tester
+    extension_id: ibm.devops.services.pipeline.crawler.tester
+    target:
+      region_id: ${STAGING_REGION_ID}
+      organization: ${STAGING_ORG_NAME}
+      space: ${STAGING_SPACE_NAME}
+    WAIT_TIME: '5'
+- name: STAGING
+  inputs:
+  - type: job
+    stage: BUILD
+    job: Container build
+  jobs:
+  - name: Deploy Kubernetes Pod
+    type: deployer
+    target:
+      region_id: ${STAGING_REGION_ID}
+      organization: ${STAGING_ORG_NAME}
+      space: ${STAGING_NAMESPACE_NAME}
+      api_key: ${API_KEY}
+      kubernetes_cluster: ${STAGING_CLUSTER_NAME}
     script: |
       #!/bin/bash
-      # Push app
-      export CF_APP_NAME="$CF_APP-staging"
-      if ! cf app $CF_APP_NAME; then  
-        cf push $CF_APP_NAME
-      else
-        old_cf_app_name=${CF_APP_NAME}-OLD-$(date +"%s")
-        rollback() {
-          set +e  
-          if cf app $old_cf_app_name; then
-            cf logs $CF_APP_NAME --recent
-            cf delete $CF_APP_NAME -f
-            cf rename $old_cf_app_name $CF_APP_NAME
-          fi
-          exit 1
-        }
-        set -e
-        trap rollback ERR
-        cf rename $CF_APP_NAME $old_cf_app_name
-        cf push $CF_APP_NAME
-        cf delete $old_cf_app_name -f
+      #set -x
+
+      #Check cluster availability
+      ip_addr=$(bx cs workers $PIPELINE_KUBERNETES_CLUSTER_NAME | grep normal | awk '{ print $2 }')
+      if [ -z $ip_addr ]; then
+        echo "$PIPELINE_KUBERNETES_CLUSTER_NAME not created or workers not ready"
+        exit 1
       fi
-      # Export app name and URL for use in later Pipeline jobs
-      export APP_URL=http://$(cf app $CF_APP_NAME | grep urls: | awk '{print $2}')
-      # View logs
-      #cf logs "${CF_APP}" --recent
+
+      #Connect to a different container-service api by uncommenting and specifying an api endpoint
+      #bx cs init --host https://us-south.containers.bluemix.net
+      echo ""
+      echo "DEPLOYING USING MANIFEST:"
+      cat deployment.yml
+      kubectl apply -f deployment.yml  
+
+      echo ""
+      echo "DEPLOYED SERVICE:"
+      kubectl describe services hello-service
+
+      echo ""
+      echo "DEPLOYED PODS:"
+      kubectl describe pods --selector app=hello-app
+
+      port=$(kubectl get services | grep hello-service | sed 's/.*:\([0-9]*\).*/\1/g')
+      echo ""
+      echo "VIEW THE APPLICATION AT: http://$ip_addr:$port"    
 - name: PROD
   inputs:
   - type: job
     stage: BUILD
-    job: Build
-  triggers:
-  - type: stage
-  properties:
-  - name: CF_APP_NAME
-    value: undefined
-    type: text
-  - name: APP_URL
-    value: undefined
-    type: text
-  - name: LOGICAL_APP_NAME
-    value: ${CF_APP_NAME}
-    type: text
-  - name: LOGICAL_ENV_NAME
-    value: PRODUCTION
-    type: text
-  - name: BUILD_PREFIX
-    value: master
-    type: text
-  - name: TEMP_APP_NAME
-    value: ''
-    type: text
-  - name: TEMP_APP_URL
-    value: ''
-    type: text
-  - name: DOMAIN
-    value: ''
-    type: text    
+    job: Container build
   jobs:
-  - name: Deploy Dark
+  - name: Deploy Kubernetes Pod
     type: deployer
     target:
       region_id: ${PROD_REGION_ID}
       organization: ${PROD_ORG_NAME}
-      space: ${PROD_SPACE_NAME}
-      application: ${CF_APP_NAME}
-    script: |-      
-      #!/bin/bash
-      #set -x
-      #CF_TRACE=true
-      # Compute a unique app name using the reserved CF_APP name (configured in the 
-      # deployer or from the manifest.yml file), the build number, and a 
-      # timestamp (allowing multiple deploys for the same build).
-      export CF_APP_NAME="${CF_APP}"
-      export TEMP_APP_NAME="${CF_APP_NAME}-${BUILD_NUMBER}-$(date +%s)"
-      echo "Pushing new app:$TEMP_APP_NAME"
-      cf push $TEMP_APP_NAME --no-start
-      # cf set-env $TEMP_APP_NAME some_variable some_value
-      cf start $TEMP_APP_NAME
-      cf apps | grep $TEMP_APP_NAME
-      url=$(cf app $TEMP_APP_NAME | grep urls: | awk '{print $2}')
-      prefix="${TEMP_APP_NAME}."
-      export DOMAIN=$( echo ${url:${#prefix}} )
-      export TEMP_APP_URL="http://$url"
-      echo "##############################################################"
-      echo "Deployed new app $TEMP_APP_NAME"
-      echo "on temporary route: $TEMP_APP_URL"
-      echo "##############################################################"
-      # View logs
-      #cf logs "${TEMP_APP_NAME}" --recent
-  - name: Sanity Check
-    type: deployer
-    target:
-      region_id: ${PROD_REGION_ID}
-      organization: ${PROD_ORG_NAME}
-      space: ${PROD_SPACE_NAME}
-      application: ${CF_APP_NAME}
+      space: ${PROD_NAMESPACE_NAME}
+      api_key: ${API_KEY}
+      kubernetes_cluster: ${PROD_CLUSTER_NAME}
     script: |
       #!/bin/bash
       #set -x
-      #CF_TRACE=true
-      max_health_checks=20
-      expected_response="200"
-      echo "Check that the new app is ready to serve..."
-      iterations=0
-      while [[ "${iterations}" -lt "${max_health_checks}" ]]
-      do
-        response=$(curl -sIL -w "%{http_code}" -o /dev/null "${TEMP_APP_URL}")
-        if [[ "${response}" == "${expected_response}" ]]; then
-          echo "Got expected ${response} response"
-          break
-        else
-          iterations=$(( iterations + 1 ))
-          sleep 3
-          echo "Waiting for ${expected_response} response... Got ${response} (${iterations}/${max_health_checks})"
-        fi
-      done
-      if [[ "${iterations}" == "${max_health_checks}" ]]; then
-        echo "Couldn't get ${expected_response} response. Reverting..."
-        # Delete temporary route
-        cf delete-route $DOMAIN -n $TEMP_APP_NAME -f
-        # Stop temporary app
-        cf stop $TEMP_APP_NAME
+
+      #Check cluster availability
+      ip_addr=$(bx cs workers $PIPELINE_KUBERNETES_CLUSTER_NAME | grep normal | awk '{ print $2 }')
+      if [ -z $ip_addr ]; then
+        echo "$PIPELINE_KUBERNETES_CLUSTER_NAME not created or workers not ready"
         exit 1
       fi
-      echo "##############################################################"
-      echo "Sanity checked new app $TEMP_APP_NAME"
-      echo "on temporary route: $TEMP_APP_URL"
-      echo "##############################################################"
-  - name: Roll Out
-    type: deployer
-    target:
-      region_id: ${PROD_REGION_ID}
-      organization: ${PROD_ORG_NAME}
-      space: ${PROD_SPACE_NAME}
-      application: ${CF_APP_NAME}
-    script: |-
-      #!/bin/bash
-      #set -x
-      #CF_TRACE=true
-      cf app $TEMP_APP_NAME
-      # Map traffic to the new version by binding to the public host.
-      # NOTE: The old version(s) is still taking traffic to avoid disruption in service.
-      cf map-route $TEMP_APP_NAME $DOMAIN -n $CF_APP_NAME
-      cf routes | { grep $TEMP_APP_NAME || true; }
 
-      # Delete the temporary route that was used for testing since it is no longer needed.
-      cf unmap-route $TEMP_APP_NAME $DOMAIN -n $TEMP_APP_NAME
-      cf delete-route $DOMAIN -n $TEMP_APP_NAME -f
+      #Connect to a different container-service api by uncommenting and specifying an api endpoint
+      #bx cs init --host https://us-south.containers.bluemix.net
+      echo ""
+      echo "DEPLOYING USING MANIFEST:"
+      cat deployment.yml
+      kubectl apply -f deployment.yml  
 
-      # Delete the old app at this point. They are no longer needed.
-      cf delete -f -r $CF_APP_NAME
+      echo ""
+      echo "DEPLOYED SERVICE:"
+      kubectl describe services hello-service
 
-      # Rename temp app now it is public
-      cf rename $TEMP_APP_NAME $CF_APP_NAME
+      echo ""
+      echo "DEPLOYED PODS:"
+      kubectl describe pods --selector app=hello-app
 
-      echo "Public route bindings:"
-      cf routes | { grep $CF_APP_NAME || true; }
-      cf app $CF_APP_NAME
-      export APP_URL=http://$(cf app $CF_APP_NAME | grep urls: | awk '{print $2}')
-      echo "##############################################################"
-      echo "You have successfully executed a rolling deployment of $CF_APP_NAME"
-      echo "at: $APP_URL"
-      echo "##############################################################"
-      # View logs
-      #cf logs "${CF_APP_NAME}" --recent      
+      port=$(kubectl get services | grep hello-service | sed 's/.*:\([0-9]*\).*/\1/g')
+      echo ""
+      echo "VIEW THE APPLICATION AT: http://$ip_addr:$port"

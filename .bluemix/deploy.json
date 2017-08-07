@@ -1,19 +1,24 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "messages": {
-        "$i18n": "locales.yml"
+       "$i18n": "locales.yml"
     },
-    "title": {
-        "$ref": "#/messages/deploy.title"
+     "title": {
+      "$ref": "#/messages/deploy.title"
     },
     "description": {
-        "$ref": "#/messages/deploy.description"
+      "$ref": "#/messages/deploy.description"
     },
     "longDescription": {
-        "$ref": "#/messages/deploy.longDescription"
+      "$ref": "#/messages/deploy.longDescription"
     },
     "type": "object",
     "properties": {
+       "api-key": {
+            "description": "The Bluemix API key is used to access the IBM Container Service API and interact with the cluster. You can obtain your API key with 'bx iam api-key-create' or via the console at https://console.ng.bluemix.net/iam/#/apikeys by clicking **Create API key** (Each API key only can be viewed once).",
+            "type": "string",
+            "pattern": "\\S"
+        },
         "staging-region": {
             "description": "The bluemix region",
             "type": "string"
@@ -22,9 +27,14 @@
             "description": "The bluemix org",
             "type": "string"
         },
-        "staging-space": {
+        "staging-namespace": {
             "description": "The bluemix space",
             "type": "string"
+        },
+       "staging-cluster-name": {
+            "description": "Your staging cluster name. Retrieve it with [bx cs clusters] or via the console at https://console.ng.bluemix.net/containers-kubernetes/home/clusters .",
+            "type": "string",
+            "pattern": "\\S"
         },
         "prod-region": {
             "description": "The bluemix region",
@@ -34,109 +44,128 @@
             "description": "The bluemix org",
             "type": "string"
         },
-        "prod-space": {
+       "prod-namespace": {
             "description": "The bluemix space",
             "type": "string"
         },
-        "prod-app-name": {
+       "prod-cluster-name": {
+            "description": "Your prod cluster name. Retrieve it with [bx cs clusters] or via the console at https://console.ng.bluemix.net/containers-kubernetes/home/clusters .",
+            "type": "string",
+            "pattern": "\\S"
+        },
+       "app-name": {
             "description": {
-                "$ref": "#/messages/deploy.appDescription"
+              "$ref": "#/messages/deploy.appDescription"
             },
             "type": "string",
             "pattern": "\\S"
         }
     },
     "required": [
-        "staging-region",
-        "staging-organization",
-        "staging-space",
-        "prod-region",
-        "prod-organization",
-        "prod-space",
-        "prod-app-name"
+        "api-key", 
+        "staging-region", 
+        "staging-organization", 
+        "staging-namespace", 
+        "staging-cluster-name", 
+        "prod-region", 
+        "prod-organization", 
+        "prod-space", 
+        "prod-cluster-name", 
+        "app-name"
     ],
     "form": [
-        {
-            "type": "validator",
-            "url": "/devops/setup/bm-helper/helper.html"
-        },
-        {
-            "type": "text",
-            "readonly": false,
-            "title": {
-                "$ref": "#/messages/deploy.appName"
-            },
-            "key": "prod-app-name"
-        },
-        {
+       {
+          "type": "validator",
+          "url": "/devops/setup/bm-helper/helper.html"
+       },{
+          "type": "text",
+          "readonly": false,
+          "title": {
+            "$ref": "#/messages/deploy.appName"
+          },
+          "key": "app-name"
+        },{
+          "type": "password",
+          "readonly": false,
+          "title": "Bluemix API Key",
+          "key": "api-key"
+        },{
             "type": "table",
-            "columnCount": 4,
-            "widths": [
-                "15%",
-                "28%",
-                "28%",
-                "28%"
-            ],
+            "columnCount": 5,
+            "widths": ["15%", "20%", "20%", "20%", "20%"],
             "items": [
                 {
-                    "type": "label",
-                    "title": ""
-                },
+                  "type": "label",
+                  "title": ""
+                },{
+                  "type": "label",
+                  "title": {
+                    "$ref": "#/messages/region"
+                  }
+                },{
+                  "type": "label",
+                  "title": "Cluster Name"
+                },{
+                  "type": "label",
+                  "title": {
+                    "$ref": "#/messages/organization"
+                  }
+                },{
+                  "type": "label",
+                  "title": {
+                    "$ref": "#/messages/space"
+                  }
+                },{
+                  "type": "label",
+                  "title": {
+                    "$ref": "#/messages/stagingStage"
+                  }
+                },{
+                  "type": "select",
+                  "key": "staging-region"
+                },{
+                  "type": "text",
+                  "key": "staging-cluster-name",
+                  "readonly": false
+                },{
+                  "type": "select",
+                  "key": "staging-organization"
+                },{
+                  "type": "select",
+                  "key": "staging-space",
+                  "readonly": false
+                },{
+                  "type": "label",
+                  "title": {
+                    "$ref": "#/messages/prodStage"
+                  }
+                },{
+                  "type": "select",
+                  "key": "prod-region"
+                },{
+                  "type": "text",
+                  "key": "prod-cluster-name",
+                  "readonly": false
+                },{
+                  "type": "select",
+                  "key": "prod-organization"
+                },{
+                  "type": "select",
+                  "key": "prod-space",
+                  "readonly": false
+                }
+            ]
+        },{
+		  "type": "table",
+          "columnCount": 2,
+            "widths": ["15%", "80%"],
+            "items": [
                 {
-                    "type": "label",
-                    "title": {
-                        "$ref": "#/messages/region"
-                    }
-                },
-                {
-                    "type": "label",
-                    "title": {
-                        "$ref": "#/messages/organization"
-                    }
-                },
-                {
-                    "type": "label",
-                    "title": {
-                        "$ref": "#/messages/space"
-                    }
-                },
-                {
-                    "type": "label",
-                    "title": {
-                        "$ref": "#/messages/stagingStage"
-                    }
-                },
-                {
-                    "type": "select",
-                    "key": "staging-region"
-                },
-                {
-                    "type": "select",
-                    "key": "staging-organization"
-                },
-                {
-                    "type": "select",
-                    "key": "staging-space",
-                    "readonly": false
-                },                
-                {
-                    "type": "label",
-                    "title": {
-                        "$ref": "#/messages/prodStage"
-                    }
-                },
-                {
-                    "type": "select",
-                    "key": "prod-region"
-                },
-                {
-                    "type": "select",
-                    "key": "prod-organization"
-                },
-                {
-                    "type": "select",
-                    "key": "prod-space",
-                    "readonly": false
+                  "type": "label",
+                  "title": ""
+                },{
+                  "type": "label",
+                  "title": "Retrieve the Kubernetes cluster name with the CLI command 'bx cs clusters' or via the [console](https://console.bluemix.net/containers-kubernetes/home/clusters)."
                 }
             ]
         }

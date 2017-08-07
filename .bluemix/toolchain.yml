@@ -13,11 +13,11 @@ template:
     - sample-repo
   info:
     git url: >-
-      [https://github.com/open-toolchain/cf-starter-wwghe-toolchain](https://github.com/open-toolchain/cf-starter-wwghe-toolchain)
+      [https://github.com/open-toolchain/kube-starter-wwghe-toolchain](https://github.com/open-toolchain/kube-starter-wwghe-toolchain)
     git branch: >-
-      [master](https://github.com/open-toolchain/cf-starter-wwghe-toolchain/tree/master)
+      [master](https://github.com/open-toolchain/kube-starter-wwghe-toolchain/tree/master)
 toolchain:
-  name: 'wwater-toolchain-{{timestamp}}'
+  name: 'wwater-k8s-toolchain-{{timestamp}}'
   template:
     getting_started:
       $ref: "#/messages/template.gettingStarted"
@@ -26,7 +26,7 @@ services:
     service_id: github_integrated
     parameters:
       repo_name: '{{toolchain.name}}'
-      repo_url: 'https://github.com/open-toolchain/node-hello-world'
+      repo_url: 'https://github.com/open-toolchain/hello-containers'
       type: clone
       has_issues: true
       enable_traceability: true
@@ -44,10 +44,10 @@ services:
         env:
           SAMPLE_REPO: sample-repo
           CF_APP_NAME: '{{form.pipeline.parameters.prod-app-name}}'
-          STAGING_SPACE_NAME: '{{form.pipeline.parameters.staging-space}}'
+          STAGING_NAMESPACE_NAME: '{{form.pipeline.parameters.staging-space}}'
           STAGING_ORG_NAME: '{{form.pipeline.parameters.staging-organization}}'
           STAGING_REGION_ID: '{{form.pipeline.parameters.staging-region}}'          
-          PROD_SPACE_NAME: '{{form.pipeline.parameters.prod-space}}'
+          PROD_NAMESPACE_NAME: '{{form.pipeline.parameters.prod-space}}'
           PROD_ORG_NAME: '{{form.pipeline.parameters.prod-organization}}'
           PROD_REGION_ID: '{{form.pipeline.parameters.prod-region}}'
         execute: true
@@ -74,7 +74,7 @@ services:
 form:
   pipeline:
     parameters:
-      staging-region: ibm:ys1:us-south
+      staging-region: ibm:yp:us-south
       staging-space: staging
       prod-region: ibm:yp:us-south
       prod-space: prod
