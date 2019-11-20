@@ -1,4 +1,5 @@
-# ![Icon](./.bluemix/secure-lock-kubernetes.png) Get started with Docker/Kubernetes and IBM Whitewater
+# ![Icon](./.bluemix/secure-lock-kubernetes.png) Get started with Docker/Kubernetes and IBM Whitewater - deprecated
+## use https://github.com/open-toolchain/secure-kube-toolchain instead and select Github Enterprise Whitewater as the source provider
 
 ### Continuously deliver a Docker app with IBM Whitewater GHE and Kubernetes
 
